@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     return createResponse({
       status: 'connected',
       database: db.databaseName,
-      collections: collections.map(c => c.name),
+      collections: collections.map((c: { name: string }) => c.name),
       stats: {
         collections: stats.collections,
         objects: stats.objects,

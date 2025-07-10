@@ -115,6 +115,7 @@ export default function Payment() {
       body: JSON.stringify({
         courseId: enrollmentData?.courseId,
         courseTitle: enrollmentData?.courseTitle,
+        slotId: enrollmentData?.slotId, 
         price: enrollmentData?.price,
         userEmail: user.email,
       }),

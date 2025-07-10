@@ -293,10 +293,10 @@ export default function Dashboard() {
                               <span>Progress</span>
                               <span>{enrollment.progress || 0}%</span>
                             </div>
-                            <Progress
+                            {/* <Progress
                               value={enrollment.progress || 0}
                               className="h-2"
-                            />
+                            /> */}
                           </div>
 
                           <div className="flex items-center justify-between text-sm text-gray-600">

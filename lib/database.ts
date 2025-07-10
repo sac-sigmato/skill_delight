@@ -123,7 +123,7 @@ export async function connectToDatabase() {
     };
 
     console.log('Connecting to MongoDB...');
-    await mongoose.connect(MONGODB_URI, opts);
+    await mongoose.connect(MONGODB_URI as string, opts);
     
     isConnected = true;
     console.log('✅ Connected to MongoDB successfully');

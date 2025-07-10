@@ -1,12 +1,14 @@
 import Stripe from "stripe";
 import { NextResponse } from "next/server";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string); // removed apiVersion
+const stripe = new Stripe(
+  process.env.STRIPE_SECRET_KEY as string /* No need for apiVersion */
+);
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { courseId, courseTitle, price, userEmail, slotId } = body;
+    const { courseId, courseTitle, price, userEmail } = body;
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -24,11 +26,7 @@ export async function POST(req: Request) {
           quantity: 1,
         },
       ],
-      metadata: {
-        courseId,
-        slotId,
-        userEmail,
-      },
+      metadata: { courseId },
       success_url: `${req.headers.get("origin")}/payment/success`,
       cancel_url: `${req.headers.get("origin")}/courses/${courseId}`,
     });
