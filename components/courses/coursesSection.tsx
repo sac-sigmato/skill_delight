@@ -26,8 +26,11 @@ interface Course {
   students?: number;
   instructor?: string;
 }
+interface CoursesSectionProps {
+  courses: Course[]; // ✅ Props type
+}
 
-const CoursesSection: React.FC = () => {
+const CoursesSection: React.FC<CoursesSectionProps> = ({ courses:any }) => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [categories, setCategories] = useState<string[]>([]);

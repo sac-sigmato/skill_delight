@@ -77,18 +77,18 @@ export default function Home() {
     country: "",
   });
 
-  const handleSubscribe = (e) => {
+  const handleSubscribe = (e:any) => {
     e.preventDefault();
     console.log("Subscribed with:", email);
     setEmail("");
   };
 
-  const handleEnquiryChange = (e) => {
+  const handleEnquiryChange = (e:any) => {
     const { name, value } = e.target;
     setEnquiryForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleEnquirySubmit = (e) => {
+  const handleEnquirySubmit = (e:any) => {
     e.preventDefault();
     console.log("Enquiry for:", enquiryCourse);
     console.log("Submitted with:", enquiryForm);
