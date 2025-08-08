@@ -1,15 +1,34 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Clock, Users, Star, BookOpen, ArrowLeft, Calendar, CheckCircle, Play, Award, Target, User } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  Clock,
+  Users,
+  Star,
+  BookOpen,
+  ArrowLeft,
+  Calendar,
+  CheckCircle,
+  Play,
+  Award,
+  Target,
+  User,
+  Compass,
+} from "lucide-react";
 import { toast } from "sonner";
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 interface Course {
   id: string;
   title: string;
@@ -38,117 +57,148 @@ interface CourseDetailsClientProps {
   courseId: string;
 }
 
-export default function CourseDetailsClient({ courseId }: CourseDetailsClientProps) {
+export default function CourseDetailsClient({
+  courseId,
+}: CourseDetailsClientProps) {
   const router = useRouter();
   const [course, setCourse] = useState<Course | null>(null);
-  const [selectedSlot, setSelectedSlot] = useState<string>('');
+  const [selectedSlot, setSelectedSlot] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     console.log("Fetching course details...");
-    
+
     fetchCourse();
     checkUserAuth();
   }, [courseId]);
 
+  const [currency, setCurrency] = useState("USD");
+  const [locale, setLocale] = useState("en-US");
+  useEffect(() => {
+    const detectCurrency = async () => {
+      try {
+        // Try getting country from IP
+        const res = await fetch("https://ipapi.co/json");
+        const data = await res.json();
+        const countryCode = data.country || "US";
+        const userLocale = data.languages?.split(",")[0] || "en-US";
+
+        setLocale(userLocale);
+        setCurrency(data.currency);
+      } catch (error) {
+        console.error("Location detection failed. Falling back to USD.");
+        setCurrency("USD");
+      }
+    };
+
+    detectCurrency();
+  }, []);
+  const formattedPrice = new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: currency,
+  }).format(course?.price || 0);
   const checkUserAuth = () => {
     try {
-      const userData = localStorage.getItem('user');
+      const userData = localStorage.getItem("user");
       if (userData) {
         const parsedUser = JSON.parse(userData);
-        if (parsedUser && parsedUser.id && parsedUser.name && parsedUser.email) {
+        if (
+          parsedUser &&
+          parsedUser.id &&
+          parsedUser.name &&
+          parsedUser.email
+        ) {
           setUser(parsedUser);
         }
       }
     } catch (error) {
-      console.error('Error checking user auth:', error);
+      console.error("Error checking user auth:", error);
     }
   };
 
   const fetchCourse = async () => {
     try {
       console.log(`🔍 Fetching course details for ID: ${courseId}`);
-      
+
       const response = await fetch(`/api/courses/${courseId}`);
-      console.log('📡 Course API response status:', response.status);
-      
+      console.log("📡 Course API response status:", response.status);
+
       if (response.ok) {
         const data = await response.json();
-        console.log('📊 Course API response data:', data);
-        
+        console.log("📊 Course API response data:", data);
+
         if (data && data.data) {
           setCourse(data.data);
-          console.log('✅ Course loaded successfully:', data.data.title);
+          console.log("✅ Course loaded successfully:", data.data.title);
         } else {
-          console.error('❌ Invalid course data received');
+          console.error("❌ Invalid course data received");
         }
       } else {
-        console.error('❌ Failed to fetch course');
+        console.error("❌ Failed to fetch course");
       }
     } catch (error) {
-      console.error('❌ Error fetching course:', error);
+      console.error("❌ Error fetching course:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleEnrollment = () => {
+    try {
+      console.log("Handling enrollment...");
 
-const handleEnrollment = () => {
-  try {
-    console.log("Handling enrollment...");
+      if (!selectedSlot) {
+        console.log("Please select a time slot before enrolling.");
+        toast.error("Please select a time slot before enrolling.");
+        return;
+      }
 
-    if (!selectedSlot) {
-      console.log("Please select a time slot before enrolling.");
-      toast.error("Please select a time slot before enrolling.");
-      return;
-    }
+      if (!course) {
+        console.log("Course information is not available.");
+        toast.error("Course information is not available.");
+        return;
+      }
 
-    if (!course) {
-      console.log("Course information is not available.");
-      toast.error("Course information is not available.");
-      return;
-    }
+      if (!user) {
+        console.log("User not authenticated. Redirecting to login...");
 
-    if (!user) {
-      console.log("User not authenticated. Redirecting to login...");
+        const enrollmentIntent = {
+          courseId: course.id,
+          courseTitle: course.title,
+          slotId: selectedSlot,
+          price: course.price,
+          returnUrl: `/courses/${course.id}`,
+        };
 
-      const enrollmentIntent = {
+        localStorage.setItem(
+          "enrollmentIntent",
+          JSON.stringify(enrollmentIntent)
+        );
+        toast("Redirecting to login...");
+        router.push("/auth/login?redirect=enrollment");
+
+        return;
+      }
+
+      // All validations passed
+      toast.success("Enrollment successful! Redirecting to payment...");
+
+      const enrollmentData = {
         courseId: course.id,
         courseTitle: course.title,
         slotId: selectedSlot,
         price: course.price,
-        returnUrl: `/courses/${course.id}`,
+        timestamp: new Date().toISOString(),
       };
 
-      localStorage.setItem(
-        "enrollmentIntent",
-        JSON.stringify(enrollmentIntent)
-      );
-      toast("Redirecting to login...");
-      router.push("/auth/login?redirect=enrollment");
-
-      return;
+      localStorage.setItem("pendingEnrollment", JSON.stringify(enrollmentData));
+      router.push("/payment");
+    } catch (error) {
+      console.error("Error handling enrollment:", error);
+      toast.error("An unexpected error occurred. Please try again.");
     }
-
-    // All validations passed
-    toast.success("Enrollment successful! Redirecting to payment...");
-
-    const enrollmentData = {
-      courseId: course.id,
-      courseTitle: course.title,
-      slotId: selectedSlot,
-      price: course.price,
-      timestamp: new Date().toISOString(),
-    };
-
-    localStorage.setItem("pendingEnrollment", JSON.stringify(enrollmentData));
-    router.push("/payment");
-  } catch (error) {
-    console.error("Error handling enrollment:", error);
-    toast.error("An unexpected error occurred. Please try again.");
-  }
-};
+  };
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -164,7 +214,9 @@ const handleEnrollment = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Course Not Found</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Course Not Found
+          </h1>
           <Link href="/">
             <Button>Back to Home</Button>
           </Link>
@@ -369,7 +421,7 @@ const handleEnrollment = () => {
             <Card className="sticky top-8">
               <CardHeader>
                 <div className="text-3xl font-bold text-gray-900 mb-2">
-                  ${course.price || 0}
+                  {formattedPrice}
                 </div>
                 <CardDescription>
                   One-time payment for lifetime access
@@ -475,7 +527,7 @@ const handleEnrollment = () => {
                   size="lg"
                   onClick={handleEnrollment}
                 >
-                  <Play className="mr-2 h-4 w-4" />
+                  <Compass className="mr-2 h-4 w-4" />
                   {user ? "Enroll Now" : "Sign In to Enroll"}
                 </Button>
 

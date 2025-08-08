@@ -134,6 +134,31 @@ export default function Payment() {
   }
 };
 
+const [currency, setCurrency] = useState("USD");
+const [locale, setLocale] = useState("en-US");
+useEffect(() => {
+  const detectCurrency = async () => {
+    try {
+      // Try getting country from IP
+      const res = await fetch("https://ipapi.co/json");
+      const data = await res.json();
+      const countryCode = data.country || "US";
+      const userLocale = data.languages?.split(",")[0] || "en-US";
+
+      setLocale(userLocale);
+      setCurrency(data.currency || "USD");
+    } catch (error) {
+      console.error("Location detection failed. Falling back to USD.");
+      setCurrency("USD");
+    }
+  };
+
+  detectCurrency();
+}, []);
+const formattedPrice = new Intl.NumberFormat(locale, {
+  style: "currency",
+  currency: currency,
+}).format(enrollmentData?.price || 0);
 
   if (!enrollmentData || !user) {
     return (
@@ -154,7 +179,9 @@ export default function Payment() {
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-2">
               <BookOpen className="h-8 w-8 text-blue-600" />
-              <span className="text-2xl font-bold text-gray-900">Skill Delight</span>
+              <span className="text-2xl font-bold text-gray-900">
+                Skill Delight
+              </span>
             </div>
             <div className="flex items-center space-x-2">
               <User className="h-4 w-4 text-gray-600" />
@@ -243,16 +270,20 @@ export default function Payment() {
 
                   <div className="flex items-center space-x-2 text-sm text-gray-600 mt-4">
                     <Lock className="h-4 w-4" />
-                    <span>Your payment information is secure and encrypted</span>
+                    <span>
+                      Your payment information is secure and encrypted
+                    </span>
                   </div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full mt-6" 
+                  <Button
+                    type="submit"
+                    className="w-full mt-6"
                     size="lg"
                     disabled={isProcessing}
                   >
-                    {isProcessing ? 'Processing Payment...' : `Pay $${enrollmentData.price}`}
+                    {isProcessing
+                      ? "Processing Payment..."
+                      : `Pay $${enrollmentData.price}`}
                   </Button>
                 </form>
               </CardContent>
@@ -267,14 +298,18 @@ export default function Payment() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <h3 className="font-semibold text-lg">{enrollmentData.courseTitle}</h3>
+                  <h3 className="font-semibold text-lg">
+                    {enrollmentData.courseTitle}
+                  </h3>
                   <p className="text-gray-600">Online Live Course</p>
                 </div>
 
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <div className="flex items-center space-x-2 mb-2">
                     <User className="h-4 w-4 text-blue-600" />
-                    <span className="font-medium text-blue-800">Enrolled Student</span>
+                    <span className="font-medium text-blue-800">
+                      Enrolled Student
+                    </span>
                   </div>
                   <p className="text-blue-700">{user.name}</p>
                   <p className="text-blue-600 text-sm">{user.email}</p>
@@ -285,15 +320,18 @@ export default function Payment() {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Course Fee</span>
-                    <span>${enrollmentData.price}</span>
+                    <span>
+                      {formattedPrice}
+                      {enrollmentData.price}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Platform Fee</span>
-                    <span>$0</span>
+                    <span> {formattedPrice}0</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Taxes</span>
-                    <span>$0</span>
+                    <span> {formattedPrice}0</span>
                   </div>
                 </div>
 
@@ -301,13 +339,19 @@ export default function Payment() {
 
                 <div className="flex justify-between font-semibold text-lg">
                   <span>Total</span>
-                  <span>${enrollmentData.price}</span>
+                  <span>
+                    {" "}
+                    {formattedPrice}
+                    {enrollmentData.price}
+                  </span>
                 </div>
 
                 <div className="bg-green-50 p-4 rounded-lg">
                   <div className="flex items-center space-x-2">
                     <CheckCircle className="h-5 w-5 text-green-600" />
-                    <span className="text-green-800 font-medium">What's included:</span>
+                    <span className="text-green-800 font-medium">
+                      What's included:
+                    </span>
                   </div>
                   <ul className="mt-2 space-y-1 text-sm text-green-700">
                     <li>• Live interactive sessions</li>
